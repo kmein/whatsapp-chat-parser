@@ -1,29 +1,36 @@
 {-# LANGUAGE RankNTypes, GADTs #-}
 
 module Parser
-    ( messageP
-    , localTimeP
+    ( parseChat
     ) where
 
 import Chat
 
+import Data.Bifunctor (bimap)
+import Data.ByteString.Lazy (ByteString)
 import Data.Text (Text)
 import qualified Data.Text as Text
 import Data.Time.Calendar (fromGregorian)
 import Data.Time.LocalTime (LocalTime(..), TimeOfDay(..))
 import Text.Megaparsec
+import Text.Megaparsec.ByteString.Lazy
+import Text.Megaparsec.Char
 
-type Parser = Parsec () Text
+parseChat :: ByteString -> Either String Chat
+parseChat = bimap show id . parse chatP "(input)"
+
+chatP :: Parser Chat
+chatP = many messageP
 
 messageP :: Parser Message
 messageP = do
     dt <- localTimeP
     string " - "
-    u <- Text.pack <$> anyChar `someTill` string ": "
-    t <- Text.pack <$> anyChar `someTill` ((() <$ nextMessage) <|> eof)
+    u <- optional $ Text.pack <$> anyChar `someTill` string ": "
+    t <- Text.pack <$> anyChar `someTill` (eof <|> (() <$ nextMessage))
     return Message {dateTime = dt, user = u, message = t}
   where
-    nextMessage = try $ char '\n' *> lookAhead messageP
+    nextMessage = try $ char '\n' *> lookAhead localTimeP
 
 localTimeP :: Parser LocalTime
 localTimeP = do

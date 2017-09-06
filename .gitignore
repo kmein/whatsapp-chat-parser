@@ -1,2 +1,3 @@
-chat.*
-.stack-work/**
+whatsapp2db/.stack-work/**
+*.txt
+*.db
