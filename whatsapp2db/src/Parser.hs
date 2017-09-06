@@ -7,16 +7,15 @@ module Parser
 import Chat
 
 import Data.Bifunctor (bimap)
-import Data.ByteString.Lazy (ByteString)
-import Data.Text (Text)
-import qualified Data.Text as Text
+import Data.Text.Lazy (Text)
+import qualified Data.Text.Lazy as Text
 import Data.Time.Calendar (fromGregorian)
 import Data.Time.LocalTime (LocalTime(..), TimeOfDay(..))
 import Text.Megaparsec
-import Text.Megaparsec.ByteString.Lazy
+import Text.Megaparsec.Text.Lazy
 import Text.Megaparsec.Char
 
-parseChat :: ByteString -> Either String Chat
+parseChat :: Text -> Either String Chat
 parseChat = bimap show id . parse chatP "(input)"
 
 chatP :: Parser Chat
@@ -26,8 +25,8 @@ messageP :: Parser Message
 messageP = do
     dt <- localTimeP
     string " - "
-    u <- optional $ Text.pack <$> anyChar `someTill` string ": "
-    t <- Text.pack <$> anyChar `someTill` (eof <|> (() <$ nextMessage))
+    u <- optional $ (Text.toStrict . Text.pack) <$> anyChar `someTill` string ": "
+    t <- (Text.toStrict . Text.pack) <$> anyChar `someTill` (eof <|> (() <$ nextMessage))
     return Message {dateTime = dt, user = u, message = t}
   where
     nextMessage = try $ char '\n' *> lookAhead localTimeP
