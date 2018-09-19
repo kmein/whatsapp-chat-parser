@@ -25,7 +25,7 @@ createTable conn =
         conn
         ("CREATE TABLE " ++
          _TABLE_NAME_ ++
-         " (id ROWID, date_time DATETIME NOT NULL, user VARCHAR(30), message TEXT NOT NULL)")
+         " (id INTEGER PRIMARY KEY AUTOINCREMENT, date_time DATETIME NOT NULL, user VARCHAR(30), message TEXT NOT NULL)")
         []
 
 writeSqlite3 :: FilePath -> Chat -> IO ()
